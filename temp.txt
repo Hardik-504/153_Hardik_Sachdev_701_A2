@@ -1,0 +1,277 @@
+
+    
+const express = require('express');
+const multer = require('multer');
+const { body, validationResult } = require('express-validator');
+const path = require('path');
+const fs = require('fs');
+const app = express();
+
+app.set('view engine', 'ejs');
+app.use(express.urlencoded({ extended: true }));//This line helps Express to read data from HTML forms (like username, email, etc.).
+app.use(express.static('public'));
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, './public/uploads');
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '_' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + '_' + file.originalname);
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    if (ext !== '.png' && ext !== '.jpg' && ext !== '.jpeg') {
+      return cb(new Error('Only images allowed (.jpg, .jpeg, .png)'));
+    }
+    cb(null, true);
+  }
+}).fields([
+  { name: 'txtpic', maxCount: 1 },
+  { name: 'txtpics', maxCount: 5 }
+]);
+
+
+app.get('/', (req, res) => {
+  res.render('form', { errors: {}, old: {} });
+});
+
+
+app.post('/register', 
+  (req, res, next) => upload(req, res, function(err) {
+    if (err instanceof multer.MulterError || err) {
+      req.fileError = err.message;
+    }
+    next();
+  }),
+  [
+    body('txtuname').notEmpty().withMessage('Username is required'),
+    body('txtemail').isEmail().withMessage('Valid email required'),
+    body('txtpassword').isLength({ min: 5 }).withMessage('Password must be at least 5 chars'),
+    body('txtcpassword').custom((value, { req }) => value === req.body.password).withMessage('Passwords must match'),
+    body('txtgen').notEmpty().withMessage('Gender is required'),
+    body('txthob').notEmpty().withMessage('At least one hobby must be selected'),
+    body('txtpic').notEmpty().withMessage('Profile picture is required'),
+     body('txtpics').notEmpty().withMessage(' picture is required')
+   
+  ],
+  (req, res) => {
+    const errors = validationResult(req);
+    const fileError = req.fileError ? { file: { msg: req.fileError } } : {};
+
+    if (!errors.isEmpty() || req.fileError) {
+      return res.render('form', {
+        errors: { ...errors.mapped(), ...fileError },
+        old: req.body
+      });
+    }
+
+    const data = {
+      username: req.body.txtuname,
+      email: req.body.txtemail,
+      gender: req.body.txtgen,
+      hobbies: req.body.txthob || [],
+      profilePic: req.files.txtpic ? req.files.txtpic[0].filename : '',
+      otherPics: req.files.txtpics ? req.files.txtpics.map(f => f.filename) : []
+    };
+
+    const downloadFilePath = './public/uploads/' + `user_${Date.now()}.txt`;
+    const content = `User Info:\n${JSON.stringify(data, null, 2)}`;
+    fs.writeFileSync(downloadFilePath, content);
+
+    res.render('success', { data, downloadPath: downloadFilePath.replace('./public', '') });
+  }
+);
+
+app.get('/download', (req, res) => {
+  const filePath = './public/' + req.query.path;
+  res.download(filePath);
+});
+
+app.listen(3000, () => console.log('Server started at http://localhost:3000'));
+
+
+
+
+form.ejs
+<!-- 1)Develop a user registration form (fields: username, password, confirm password, email, gender, hobbies, upload profile pic,
+ upload other pics) (use text box, radio, checkboxes, file upload) using Express.  
+ Form should also contain file upload (single, multiple) with validations.
+    - In case of invalid data, display errors along with all previous field values.
+    - In case of all valid fields, display all data and images in a well formatted tabular form. 
+
+    and allow the user to download that file using Express. Develop route for file download.
+    (Use express, ejs, express-validator)-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Question-1</title>
+</head>
+<body>
+    <form action="/register" method="POST" enctype="multipart/form-data">
+        <table border="10px" align="center" style="border-radius: 20px;">
+            <tr>
+                <td colspan="2"><h1 align="center">USER REGISTRATION</h1></td>
+            </tr>
+            
+            <tr>
+                <td>Enter Username:</td>
+                <td>
+                    <input type="text" name="txtuname" value="<%= old.txtuname || 'No Data Entered !' %>" style="width: 98%;">
+                     <span><%= errors.txtuname?.msg %></span>
+                </td>
+            </tr>
+
+            <tr>
+                <td>Create Your Password:</td>
+                <td>
+                    <input type="password" name="txtpassword" style="width: 98%;">
+                    <span><%= errors.txtpassword?.msg %></span>
+                </td>
+            </tr>
+
+            <tr>
+                <td>Confirm Your Password:</td>
+                <td>
+                    <input type="password" name="txtcpassword" style="width: 98%;">
+                    <span><%= errors.txtcpassword?.msg %></span>
+                </td>
+            </tr>
+
+            <tr>
+                <td>Enter Your Email I'D:</td>
+                <td>
+                    <input type="email" name="txtemail"  value="<%= old.txtemail || 'No Data Entered !' %>" style="width: 98%;">
+                    <span><%= errors.txtemail?.msg %></span>
+                </td>
+            </tr>
+
+            <tr>
+                <td>Select Your Gender:</td>
+                <td>
+                    <input type="radio" name="txtgen" value="Male" <%= old.txtgen === 'Male' ? 'checked' : '' %>>Male
+                    <input type="radio" name="txtgen" value="Female" <%= old.txtgen === 'Female' ? 'checked' : '' %>>Female
+                    <span><%= errors.txtgen?.msg %></span>
+                </td>
+            </tr>
+
+            <tr>
+                <td>Hobbies:</td>
+                <td>
+                    <input type="checkbox" name="txthob[]" value="Cricket">Cricket
+                    <input type="checkbox" name="txthob[]" value="football">Football
+                    <input type="checkbox" name="txthob[]" value="sleeping">Sleeping
+                    <span><%= errors.txthob?.msg %></span>
+                </td>
+            </tr>
+
+            <tr>
+                <td>Upload Your Profile Picture:</td>
+                <td>
+                    <input type="file" name="txtpic">
+                    <span><%= errors.txtpic?.msg %></span>
+                </td>
+            </tr>
+
+            <tr>
+                <td>Upload Other Picture:</td>
+                <td>
+                    <input type="file" name="txtpics" multiple>
+                    <span><%= errors.txtpics?.msg %></span>
+                </td>
+            </tr>
+
+            <tr>
+                <td colspan="2">
+                    <input type="submit" name="btnsubmit" value="Click Here To Submit Your Profile" style="width: 100%;">
+                </td>
+            </tr>
+        </table>
+    </form>
+</body>
+</html>
+
+
+<!-- 
+value="<%= old.username || '' %>"
+ <span><%= errors.username?.msg %></span>
+ 
+ <div>
+      <label>Gender:</label>
+      <input type="radio" name="gender" value="Male" <%= old.gender === 'Male' ? 'checked' : '' %>> Male
+      <input type="radio" name="gender" value="Female" <%= old.gender === 'Female' ? 'checked' : '' %>> Female
+      <span><%= errors.gender?.msg %></span>
+    </div>
+
+<input type="checkbox" name="hobbies" value="Reading"> Reading
+
+    <div>
+      <label>Other Pictures:</label>
+      <input type="file" name="otherPics" multiple>
+      <span><%= errors.file?.msg %></span>
+    </div>
+    
+    
+    
+ -->
+
+
+ submitted-data.ejs
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Registration Successful</title>
+  <style>
+    table, th, td { border: 1px solid black; border-collapse: collapse; padding: 10px; }
+    img { max-width: 150px; max-height: 150px; }
+  </style>
+</head>
+<body>
+  <h1 align="center">Registration Successful!</h1>
+  <table align="center">
+    <tr><th>Field</th><th>Value</th></tr>
+    <tr><td>Username</td><td><%= data.username %></td></tr>
+    <tr><td>Email</td><td><%= data.email %></td></tr>
+    <tr><td>Gender</td><td><%= data.gender %></td></tr>
+    <tr><td>Hobbies</td><td><%= data.hobbies.length ? data.hobbies.join(', ') : 'None' %></td></tr>
+    <tr>
+      <td>Profile Picture</td>
+      <td>
+        <% if(data.profilePic) { %>
+          <img src="/uploads/<%= data.profilePic %>" alt="Profile Pic" />
+        <% } else { %>
+          No Picture Uploaded
+        <% } %>
+      </td>
+    </tr>
+    <tr>
+      <td>Other Pictures</td>
+      <td>
+        <% if(data.otherPics.length) { %>
+          <% data.otherPics.forEach(pic => { %>
+            <img src="/uploads/<%= pic %>" alt="Other Pic" />
+          <% }); %>
+        <% } else { %>
+          No Other Pictures
+        <% } %>
+      </td>
+    </tr>
+  </table>
+
+  <p align="center" style="margin-top: 20px;">
+    <a href="/download?file=<%= encodeURIComponent(downloadFileName) %>">Download Your Info File</a>
+  </p>
+</body>
+</html>
+
+
+
+where is the problem?
