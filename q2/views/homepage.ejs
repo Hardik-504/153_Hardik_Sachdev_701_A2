@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Here</title>
+    <style>
+        table{
+           border-radius: 10px;
+        }
+        table tr{
+            border-color: transparent;
+        }
+    </style>
+</head>
+<body>
+    <% if(error){ %>
+        <p style="color: red;"><%= error %></p>
+    <% } %>
+     <form action="/homepage" method="post">
+        <table border="10px" align="center" style="padding: 10px;">
+            <tr>
+                <td colspan="2" align="center">
+                    <h1>Login here!!</h1>
+                </td>
+            </tr>
+            <tr>
+                <td>Username</td>
+                <td>
+                    <input type="text" name="txtuname" style="width: 97%;">
+                </td>
+            </tr>
+
+            <tr>
+                <td>Password</td>
+                <td>
+                    <input type="password" name="txtpassword" style="width: 97%;">
+                </td>
+            </tr>
+
+           <tr>
+                <td colspan="2">
+                    <input type="submit" name="btnLog" value="CLick Here To Login" style="width: 100%;">
+                </td>
+            </tr>
+
+           <tr>
+                <td colspan="2">
+                   <a href="#">Want To Create Account? Register Here</a>
+                </td>
+            </tr>
+    
+        </table>
+    </form>
+</body>
+</html>

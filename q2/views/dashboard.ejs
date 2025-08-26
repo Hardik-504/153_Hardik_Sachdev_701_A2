@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome To Dashboard</title>
+</head>
+<body>
+    <h1>Welcome,<%= user %></h1>
+    <h1>This is Your dashBoard!</h1>
+    
+      <input type="submit" id="btnLogout" value="CLick Here To Logout" style="width: 33%;">
+      <script>
+
+        document.querySelector("#btnLogout").addEventListener("click", (e) => {
+            console.log("callled");
+
+            fetch("http://localhost:8000/logout")
+            .then((res) => window.location.href = res.url);
+        });
+      </script>
+</body>
+</html>

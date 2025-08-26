@@ -1,0 +1,115 @@
+2) Express Login application with file session store.
+
+q2 > views >dashboard.ejs
+
+dashboard.ejs
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome To Dashboard</title>
+</head>
+<body>
+    <h1>Welcome,<%= user %></h1>
+    <h1>This is Your dashBoard!</h1>
+<input type="button"  name="Logout" value="Logout">
+</body>
+</html>
+
+q2 > views >homepaged.ejs
+
+
+homepage.ejs
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Here</title>
+    <style>
+        table{
+           border-radius: 10px;
+        }
+        table tr{
+            border-color: transparent;
+        }
+    </style>
+</head>
+<body>
+    <% if(error){ %>
+        <p style="color: red;"><%= error %></p>
+    <% } %>
+     <form action="/homepage" method="post">
+        <table border="10px" align="center" style="padding: 10px;">
+            <tr>
+                <td colspan="2" align="center">
+                    <h1>Login here!!</h1>
+                </td>
+            </tr>
+            <tr>
+                <td>Username</td>
+                <td>
+                    <input type="text" name="txtuname" style="width: 97%;">
+                </td>
+            </tr>
+
+            <tr>
+                <td>Password</td>
+                <td>
+                    <input type="password" name="txtpassword" style="width: 97%;">
+                </td>
+            </tr>
+
+           <tr>
+                <td colspan="2">
+                    <input type="button" name="btnLog" value="CLick Here To Login" style="width: 100%;">
+                </td>
+            </tr>
+
+           <tr>
+                <td colspan="2">
+                   <a href="#">Want To Create Account? Register Here</a>
+                </td>
+            </tr>
+    
+        </table>
+    </form>
+</body>
+</html>
+
+
+q2> q2.js
+
+q2.js
+
+const express = require('express');
+const multer = require('multer');
+const { body, validationResult } = require('express-validator');
+const path = require('path');
+const fs = require('fs');
+const app = express();
+
+app.set('view engine', 'ejs');
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static('public'));
+
+
+
+app.get('/rrr',(req,res)=>{
+    res.send("Hello hghghghgh");
+})
+
+app.get('/rs',(req,res)=>{
+    res.send("Hello hi");
+})
+
+app.listen(8000,()=>{
+    console.log("Server Is Running on http://localhost:8000");
+})
+
+
+what is the problem in the code give me step by step explaination
